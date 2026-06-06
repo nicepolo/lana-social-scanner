@@ -188,3 +188,48 @@ def send_kol_alert(results: list):
         if url:
             msg += f"\n[查看原文]({url})"
         _send(msg)
+
+
+def send_tg_alpha_alert(signal: dict):
+    """Telegram Alpha 頻道訊號推播"""
+    if not BOT_TOKEN or not CHAT_ID:
+        return
+
+    sig_type = signal.get("type", "")
+    channel  = signal.get("channel_label", "?")
+    sym      = signal.get("symbol", "?")
+    chain    = signal.get("chain", "?")
+    text     = signal.get("message_text", "")[:150]
+    on_okx   = "❌ 未上架" if not signal.get("on_okx") else "✅ 已上架"
+    on_bnb   = "❌ 未上架" if not signal.get("on_binance") else "✅ 已上架"
+    strength = signal.get("strength", "")
+    addr     = signal.get("token_addr", "")
+    chain_e  = "🟣 SOL" if chain == "solana" else "🟡 BSC" if chain == "bsc" else "🔗"
+
+    if sig_type == "tg_contract":
+        # 合約地址訊號
+        explorer = f"https://solscan.io/token/{addr}" if chain == "solana" else f"https://bscscan.com/token/{addr}"
+        dex = f"https://raydium.io/swap/?inputCurrency=sol&outputCurrency={addr}" if chain == "solana" else f"https://pancakeswap.finance/swap?outputCurrency={addr}"
+        bnb_link = f"https://www.binance.com/en/web3wallet/swap?chain={'solana' if chain == 'solana' else 'bsc'}&toToken={addr}"
+
+        msg = (
+            f"📡 *TG Alpha 合約地址* | {channel}\n"
+            f"鏈：{chain_e}\n"
+            f"合約：`{addr}`\n"
+            f"OKX：{on_okx}　Binance：{on_bnb}\n"
+            f"訊號強度：{strength}\n\n"
+            f"原文：_{text}_\n\n"
+            f"[查合約]({explorer}) | [DEX買入]({dex}) | [幣安買入]({bnb_link})"
+        )
+    else:
+        # 幣名提及訊號
+        msg = (
+            f"📡 *TG Alpha 提及* | {channel}\n"
+            f"幣名：*${sym}* | {chain_e}\n"
+            f"OKX：{on_okx}　Binance：{on_bnb}\n"
+            f"訊號強度：{strength}\n\n"
+            f"原文：_{text}_\n\n"
+            f"💡 建議先查合約再進場，倉位 ≤1%"
+        )
+
+    _send(msg)

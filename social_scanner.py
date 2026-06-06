@@ -57,6 +57,10 @@ def social_signals():
             "scan_count":  _cache["scan_count"],
         })
 
+@app.route("/api/tg_channels")
+def tg_channels():
+    return jsonify({"channels": get_channel_list()})
+
 @app.route("/api/health")
 def health():
     with _lock:
@@ -326,11 +330,31 @@ def run_scheduler():
 if __name__ == "__main__":
     t = threading.Thread(target=run_scheduler, daemon=True)
     t.start()
+    # 啟動 Telegram 頻道監控（背景）
+    if os.getenv("TG_API_ID") and os.getenv("TG_API_HASH"):
+        import asyncio
+        def run_tg():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            async def tg_callback(sig):
+                send_tg_alpha_alert(sig)
+            with _lock:
+                okx = _cache["okx_listed"].copy()
+                bnb = _cache["bnb_listed"].copy()
+            loop.run_until_complete(start_monitoring(okx, bnb, tg_callback))
+        tg_thread = threading.Thread(target=run_tg, daemon=True)
+        tg_thread.start()
+        log.info("📡 Telegram 頻道監控啟動")
+    else:
+        log.info("⚠️ TG_API_ID/TG_API_HASH 未設定，跳過 TG 監控")
+
     log.info(f"🌐 Web API 啟動 port {PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=False)
 
 # ── 聰明錢 + KOL 整合 ─────────────────────────────────────────
 from smart_money import scan_smart_wallets
+from tg_monitor import start_monitoring, get_channel_list
+from notify_social import send_tg_alpha_alert
 from kol_monitor import scan_kol_mentions
 from notify_social import send_smart_money_alert, send_kol_alert
 
