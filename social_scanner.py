@@ -269,9 +269,10 @@ def scan_once():
                     continue
 
                 # AI 風險分析
-                risk = analyze_token_risk(token, listing)
+                risk, trade = analyze_token_risk(token, listing)
                 token["listing"]  = listing
                 token["risk"]     = risk
+                token["trade"]    = trade
                 scanned.append(token)
 
                 # 達標條件：風險分數夠高才推播
