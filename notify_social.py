@@ -126,3 +126,64 @@ def _send(text: str):
             log.error(f"TG 發送失敗: {r.text[:100]}")
     except Exception as e:
         log.error(f"TG 請求異常: {e}")
+
+
+def send_smart_money_alert(results: list):
+    """聰明錢買入推播"""
+    if not BOT_TOKEN or not CHAT_ID:
+        return
+    now = datetime.now(TZ_TAIPEI).strftime("%Y-%m-%d %H:%M")
+    _send(f"🐋 *聰明錢動態* | {now}\n{'─'*26}")
+    for t in results[:3]:
+        sym      = t.get("symbol", "?")
+        label    = t.get("wallet_label", "?")
+        usd_val  = t.get("usd_value", 0)
+        chain    = t.get("chain", "?")
+        addr     = t.get("token_addr", "")
+        on_okx   = "❌ 未上架" if not t.get("on_okx") else "✅ 已上架"
+        on_bnb   = "❌ 未上架" if not t.get("on_binance") else "✅ 已上架"
+        chain_e  = "🟣 SOL" if chain == "solana" else "🟡 BSC"
+        dex_base = "https://raydium.io/swap/?inputCurrency=sol&outputCurrency=" if chain == "solana" else "https://pancakeswap.finance/swap?outputCurrency="
+        dex_link = dex_base + addr if addr else "N/A"
+
+        msg = (
+            f"🐋 *{label}* 買入 *${sym}*\n"
+            f"買入金額：`${usd_val:,.0f}` | {chain_e}\n"
+            f"OKX：{on_okx}　Binance：{on_bnb}\n"
+            f"訊號強度：🔥🔥🔥 超強\n\n"
+            f"💡 聰明錢先進場，跟單需謹慎\n"
+            f"建議倉位：≤2%，嚴設止損\n\n"
+            f"[去 DEX 買入]({dex_link})"
+        )
+        _send(msg)
+
+
+def send_kol_alert(results: list):
+    """KOL 提及推播"""
+    if not BOT_TOKEN or not CHAT_ID:
+        return
+    now = datetime.now(TZ_TAIPEI).strftime("%Y-%m-%d %H:%M")
+    _send(f"🐦 *KOL 提及訊號* | {now}\n{'─'*26}")
+    seen = set()
+    for t in results[:5]:
+        sym   = t.get("symbol", "?")
+        if sym in seen:
+            continue
+        seen.add(sym)
+        label    = t.get("kol_label", "?")
+        username = t.get("kol_username", "?")
+        text     = t.get("tweet_text", "")[:100]
+        url      = t.get("tweet_url", "")
+        on_okx   = "❌ 未上架" if not t.get("on_okx") else "✅ 已上架"
+        on_bnb   = "❌ 未上架" if not t.get("on_binance") else "✅ 已上架"
+        strength = t.get("strength", "")
+
+        msg = (
+            f"🐦 *{label}* (@{username}) 提及 *${sym}*\n"
+            f"OKX：{on_okx}　Binance：{on_bnb}\n"
+            f"訊號強度：{strength}\n\n"
+            f"推文：_{text}_\n"
+        )
+        if url:
+            msg += f"\n[查看原文]({url})"
+        _send(msg)

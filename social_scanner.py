@@ -311,6 +311,8 @@ def run_scheduler():
     schedule.every(1).hours.do(refresh_exchange_listings)
     # 每 N 分鐘掃描
     schedule.every(SCAN_INTERVAL_MIN).minutes.do(scan_once)
+    schedule.every(SCAN_INTERVAL_MIN).minutes.do(scan_kol)
+    schedule.every(10).minutes.do(scan_smart_money)
 
     log.info(f"⏰ 排程啟動，每 {SCAN_INTERVAL_MIN} 分鐘掃描")
     refresh_exchange_listings()
@@ -326,3 +328,30 @@ if __name__ == "__main__":
     t.start()
     log.info(f"🌐 Web API 啟動 port {PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=False)
+
+# ── 聰明錢 + KOL 整合 ─────────────────────────────────────────
+from smart_money import scan_smart_wallets
+from kol_monitor import scan_kol_mentions
+from notify_social import send_smart_money_alert, send_kol_alert
+
+def scan_smart_money():
+    """聰明錢掃描（每10分鐘）"""
+    log.info("═══ 聰明錢掃描 ═══")
+    with _lock:
+        okx = _cache["okx_listed"].copy()
+        bnb = _cache["bnb_listed"].copy()
+    results = scan_smart_wallets(okx, bnb)
+    if results:
+        send_smart_money_alert(results)
+        log.info(f"🐋 推播 {len(results)} 個聰明錢訊號")
+
+def scan_kol():
+    """KOL 推文掃描（每5分鐘）"""
+    log.info("═══ KOL 掃描 ═══")
+    with _lock:
+        okx = _cache["okx_listed"].copy()
+        bnb = _cache["bnb_listed"].copy()
+    results = scan_kol_mentions(okx, bnb)
+    if results:
+        send_kol_alert(results)
+        log.info(f"🐦 推播 {len(results)} 個 KOL 訊號")
