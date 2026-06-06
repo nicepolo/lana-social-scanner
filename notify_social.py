@@ -107,7 +107,8 @@ def _format_signal(idx: int, t: dict) -> str:
         "",
         f"💡 建議：{action}　倉位：≤{max_pos}%",
         "",
-        f"🔍 [查合約]({explorer}) | [DEX買入]({dex_link})",
+        f"🔍 [查合約]({explorer})",
+        f"⚡ [DEX買入]({dex_link}) | 🟡 [幣安錢包買入]({binance_link})",
     ]
     return "\n".join(lines)
 
