@@ -287,7 +287,7 @@ def scan_once():
                 scanned.append(token)
 
                 # 達標條件：風險分數夠高才推播
-                if risk.get("risk_score", risk.get("score", 0)) >= MIN_RISK_SCORE:
+                if True:  # 暫時顯示所有訊號，debug 用
                     signals.append(token)
                     log.info(f"✅ [{chain}] {sym} 達標！{listing['strength']} 風險分:{risk.get('risk_score', risk.get('score', 0))}")
 
