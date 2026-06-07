@@ -61,6 +61,19 @@ def social_signals():
 def tg_channels():
     return jsonify({"channels": get_channel_list()})
 
+@app.route("/api/debug")
+def debug_info():
+    with _lock:
+        return jsonify({
+            "scan_count": _cache.get("scan_count", 0),
+            "last_update": _cache.get("last_update", ""),
+            "signals_count": len(_cache.get("signals", [])),
+            "scanned_count": len(_cache.get("scanned", [])),
+            "okx_count": len(_cache.get("okx_listed", set())),
+            "bnb_count": len(_cache.get("bnb_listed", set())),
+            "scanned_sample": _cache.get("scanned", [])[:3],
+        })
+
 @app.route("/api/health")
 def health():
     with _lock:
