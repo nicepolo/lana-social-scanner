@@ -69,8 +69,8 @@ def debug_info():
             "last_update": _cache.get("last_update", ""),
             "signals_count": len(_cache.get("signals", [])),
             "scanned_count": len(_cache.get("scanned", [])),
-            "okx_count": len(_cache.get("okx_listed", set())),
-            "bnb_count": len(_cache.get("bnb_listed", set())),
+            "okx_count": len(list(_cache.get("okx_listed", set()))),
+            "bnb_count": len(list(_cache.get("bnb_listed", set()))),
             "scanned_sample": _cache.get("scanned", [])[:3],
         })
 
@@ -335,8 +335,16 @@ def run_scheduler():
     schedule.every(10).minutes.do(scan_smart_money)
 
     log.info(f"⏰ 排程啟動，每 {SCAN_INTERVAL_MIN} 分鐘掃描")
-    refresh_exchange_listings()
-    scan_once()
+    try:
+        refresh_exchange_listings()
+        log.info("✅ 交易所清單載入完成")
+    except Exception as e:
+        log.error(f"❌ 交易所清單載入失敗（繼續執行）: {e}")
+    try:
+        scan_once()
+        log.info("✅ 第一次掃描完成")
+    except Exception as e:
+        log.error(f"❌ 第一次掃描失敗: {e}")
 
     while True:
         schedule.run_pending()
