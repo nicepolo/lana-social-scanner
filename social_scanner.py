@@ -287,9 +287,9 @@ def scan_once():
                 scanned.append(token)
 
                 # 達標條件：風險分數夠高才推播
-                if risk.get("score", 0) >= MIN_RISK_SCORE:
+                if risk.get("risk_score", risk.get("score", 0)) >= MIN_RISK_SCORE:
                     signals.append(token)
-                    log.info(f"✅ [{chain}] {sym} 達標！{listing['strength']} 風險分:{risk['score']}")
+                    log.info(f"✅ [{chain}] {sym} 達標！{listing['strength']} 風險分:{risk.get('risk_score', risk.get('score', 0))}")
 
             except Exception as e:
                 log.error(f"處理 {token.get('symbol','?')} 出錯: {e}")
@@ -297,7 +297,7 @@ def scan_once():
     # 排序：未上架優先，風險分高的在前
     def sort_key(t):
         status_order = {"UNLISTED": 0, "OKX_ONLY": 1, "BNB_ONLY": 2}
-        return (status_order.get(t["listing"]["status"], 3), -t["risk"].get("score", 0))
+        return (status_order.get(t["listing"]["status"], 3), -t["risk"].get("risk_score", t["risk"].get("score", 0)))
 
     signals.sort(key=sort_key)
     now_str = datetime.now(TZ_TAIPEI).strftime("%Y-%m-%d %H:%M")
