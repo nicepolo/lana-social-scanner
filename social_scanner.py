@@ -273,7 +273,14 @@ def scan_once():
                     continue
 
                 # AI 風險分析
-                risk, trade = analyze_token_risk(token, listing)
+                risk = analyze_token_risk(token)
+                trade = {
+                    "direction": risk.get("direction", "WATCH"),
+                    "entry":     risk.get("entry", "N/A"),
+                    "stop_loss": risk.get("stop_loss", "N/A"),
+                    "target_1":  risk.get("target_1", "N/A"),
+                    "target_2":  risk.get("target_2", "N/A"),
+                }
                 token["listing"]  = listing
                 token["risk"]     = risk
                 token["trade"]    = trade
