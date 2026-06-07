@@ -258,19 +258,15 @@ def scan_once():
                 liq     = token["liquidity"]
 
                 # 基本過濾：成交量 + 漲幅 + 流動性
-                if vol_1h < MIN_VOLUME_USD:
-                    continue
-                if chg_1h < MIN_PRICE_CHANGE:
-                    continue
-                if liq < 10000:  # 流動性池 < $10K 直接跳過
-                    continue
+                # 暫時移除所有門檻 debug
+                pass
 
                 # 取得交易所上架狀態
                 listing = get_listing_status(sym)
 
-                # 已在兩家交易所上架的跳過（資訊落差消失）
-                if listing["status"] == "LISTED":
-                    continue
+                # 暫時不過濾，debug 用
+                # if listing["status"] == "LISTED":
+                #     continue
 
                 # AI 風險分析
                 risk = analyze_token_risk(token)
