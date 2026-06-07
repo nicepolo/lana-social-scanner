@@ -10,7 +10,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import schedule
 from dotenv import load_dotenv
-from ai_risk import analyze_token_risk
+from ai_risk import analyze_risk as analyze_token_risk
 from notify_social import send_signal
 
 load_dotenv()
