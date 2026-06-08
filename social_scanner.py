@@ -11,7 +11,10 @@ from flask_cors import CORS
 import schedule
 from dotenv import load_dotenv
 from ai_risk import analyze_risk as analyze_token_risk
-from notify_social import send_signal
+from notify_social import send_signal, send_tg_alpha_alert, send_smart_money_alert, send_kol_alert
+from smart_money import scan_smart_wallets
+from tg_monitor import start_monitoring, get_channel_list
+from kol_monitor import scan_kol_mentions
 
 load_dotenv()
 
@@ -326,6 +329,28 @@ def scan_once():
     log.info(f"═══ 掃描完畢，共掃 {len(scanned)} 個幣 ═══\n")
 
 
+def scan_smart_money():
+    """聰明錢掃描（每10分鐘）"""
+    log.info("═══ 聰明錢掃描 ═══")
+    with _lock:
+        okx = _cache["okx_listed"].copy()
+        bnb = _cache["bnb_listed"].copy()
+    results = scan_smart_wallets(okx, bnb)
+    if results:
+        send_smart_money_alert(results)
+        log.info(f"🐋 推播 {len(results)} 個聰明錢訊號")
+
+def scan_kol():
+    """KOL 推文掃描（每5分鐘）"""
+    log.info("═══ KOL 掃描 ═══")
+    with _lock:
+        okx = _cache["okx_listed"].copy()
+        bnb = _cache["bnb_listed"].copy()
+    results = scan_kol_mentions(okx, bnb)
+    if results:
+        send_kol_alert(results)
+        log.info(f"🐦 推播 {len(results)} 個 KOL 訊號")
+
 def run_scheduler():
     # 每小時刷新交易所上架清單
     schedule.every(1).hours.do(refresh_exchange_listings)
@@ -374,32 +399,3 @@ if __name__ == "__main__":
 
     log.info(f"🌐 Web API 啟動 port {PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=False)
-
-# ── 聰明錢 + KOL 整合 ─────────────────────────────────────────
-from smart_money import scan_smart_wallets
-from tg_monitor import start_monitoring, get_channel_list
-from notify_social import send_tg_alpha_alert
-from kol_monitor import scan_kol_mentions
-from notify_social import send_smart_money_alert, send_kol_alert
-
-def scan_smart_money():
-    """聰明錢掃描（每10分鐘）"""
-    log.info("═══ 聰明錢掃描 ═══")
-    with _lock:
-        okx = _cache["okx_listed"].copy()
-        bnb = _cache["bnb_listed"].copy()
-    results = scan_smart_wallets(okx, bnb)
-    if results:
-        send_smart_money_alert(results)
-        log.info(f"🐋 推播 {len(results)} 個聰明錢訊號")
-
-def scan_kol():
-    """KOL 推文掃描（每5分鐘）"""
-    log.info("═══ KOL 掃描 ═══")
-    with _lock:
-        okx = _cache["okx_listed"].copy()
-        bnb = _cache["bnb_listed"].copy()
-    results = scan_kol_mentions(okx, bnb)
-    if results:
-        send_kol_alert(results)
-        log.info(f"🐦 推播 {len(results)} 個 KOL 訊號")
