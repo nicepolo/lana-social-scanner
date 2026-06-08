@@ -298,8 +298,10 @@ def scan_once():
                 token["trade"]    = trade
                 scanned.append(token)
 
-                # 達標條件：風險分數夠高才推播
-                if True:  # 暫時顯示所有訊號，debug 用
+                # 達標條件：AI 真正給分 + 分數達標
+                ai_score = risk.get("risk_score", risk.get("score", 0))
+                ai_ok = risk.get("red_flags", ["AI 無法分析"]) != ["AI 無法分析"]
+                if ai_ok and ai_score >= MIN_RISK_SCORE:
                     signals.append(token)
                     log.info(f"✅ [{chain}] {sym} 達標！{listing['strength']} 風險分:{risk.get('risk_score', risk.get('score', 0))}")
 
