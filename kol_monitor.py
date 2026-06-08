@@ -51,16 +51,16 @@ EXCLUDE_WORDS = {
 
 
 def scan_kol_mentions(okx_listed: set, bnb_listed: set) -> list:
-    """掃描 KOL 推文，找出提及未上架新幣的推文"""
-    results = []
+    """KOL 推文掃描 — Nitter 公共實例已全部失效，暫停此功能"""
+    # Nitter 免費實例已全數下線（2025年後持續惡化）
+    # 若有 X_BEARER_TOKEN 才啟用 API 版本
+    if not X_BEARER_TOKEN:
+        return []
 
+    results = []
     for kol in KOL_LIST:
         try:
-            if X_BEARER_TOKEN:
-                tweets = _get_tweets_api(kol["username"])
-            else:
-                tweets = _get_tweets_nitter(kol["username"])
-
+            tweets = _get_tweets_api(kol["username"])
             for tweet in tweets:
                 tokens = _extract_tokens(tweet["text"])
                 for token in tokens:
@@ -68,27 +68,22 @@ def scan_kol_mentions(okx_listed: set, bnb_listed: set) -> list:
                         continue
                     on_okx = token in okx_listed
                     on_bnb = token in bnb_listed
-                    # 只推未上架的幣
                     if on_okx and on_bnb:
                         continue
-
                     results.append({
-                        "type":        "kol_mention",
+                        "type":         "kol_mention",
                         "kol_username": kol["username"],
-                        "kol_label":   kol["label"],
-                        "symbol":      token,
-                        "tweet_text":  tweet["text"][:200],
-                        "tweet_url":   tweet.get("url", ""),
-                        "timestamp":   tweet.get("timestamp", 0),
-                        "on_okx":      on_okx,
-                        "on_binance":  on_bnb,
-                        "strength":    "🔥🔥🔥 超強" if not on_okx and not on_bnb else "🔥🔥 強",
+                        "kol_label":    kol["label"],
+                        "symbol":       token,
+                        "tweet_text":   tweet["text"][:200],
+                        "tweet_url":    tweet.get("url", ""),
+                        "timestamp":    tweet.get("timestamp", 0),
+                        "on_okx":       on_okx,
+                        "on_binance":   on_bnb,
+                        "strength":     "🔥🔥🔥 超強" if not on_okx and not on_bnb else "🔥🔥 強",
                     })
-                    log.info(f"🐦 [{kol['label']}] 提及 ${token} — 未上架!")
-
         except Exception as e:
             log.error(f"KOL {kol['username']} 掃描失敗: {e}")
-
     return results
 
 
