@@ -106,16 +106,16 @@ def refresh_exchange_listings():
         log.error(f"OKX 上架清單抓取失敗: {e}")
 
     try:
-        # Binance 現貨幣種
-        r = requests.get("https://api.binance.com/api/v3/exchangeInfo", timeout=10)
+        # Bybit 現貨幣種（替代 Binance，因 Binance API 在部分環境被封）
+        r = requests.get("https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000", timeout=10)
         data = r.json()
         bnb = set()
-        for sym in data.get("symbols", []):
-            if sym.get("quoteAsset") == "USDT" and sym.get("status") == "TRADING":
-                bnb.add(sym.get("baseAsset", "").upper())
+        for inst in data.get("result", {}).get("list", []):
+            if inst.get("quoteCoin") == "USDT" and inst.get("status") == "Trading":
+                bnb.add(inst.get("baseCoin", "").upper())
         with _lock:
             _cache["bnb_listed"] = bnb
-        log.info(f"Binance 現貨幣種數: {len(bnb)}")
+        log.info(f"Bybit 現貨幣種數: {len(bnb)}")
     except Exception as e:
         log.error(f"Binance 上架清單抓取失敗: {e}")
 
@@ -274,15 +274,17 @@ def scan_once():
                 liq     = token["liquidity"]
 
                 # 基本過濾：成交量 + 漲幅 + 流動性
-                # 暫時移除所有門檻 debug
-                pass
+                if vol_1h < MIN_VOLUME_USD:
+                    continue
+                if chg_1h < MIN_PRICE_CHANGE:
+                    continue
 
                 # 取得交易所上架狀態
                 listing = get_listing_status(sym)
 
-                # 暫時不過濾，debug 用
-                # if listing["status"] == "LISTED":
-                #     continue
+                # 已在兩個交易所都上架的跳過（沒有套利空間）
+                if listing["status"] == "LISTED":
+                    continue
 
                 # AI 風險分析
                 risk = analyze_token_risk(token)
