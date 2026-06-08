@@ -22,7 +22,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 log = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins="*", allow_headers="*", methods=["GET","POST","OPTIONS"])
+
+@app.before_request
+def allow_all_hosts():
+    pass  # 允許所有 host
 
 # ── 設定 ──────────────────────────────────────────────────────
 SCAN_INTERVAL_MIN   = int(os.getenv("SOCIAL_SCAN_INTERVAL_MIN", "5"))
