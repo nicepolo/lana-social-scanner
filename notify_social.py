@@ -65,9 +65,11 @@ def _format_signal(idx: int, t: dict) -> str:
     red_flags  = risk.get("red_flags", [])
     green_flags= risk.get("green_flags", [])
 
-    chain_name = CHAIN_EMOJI.get(chain, chain.upper())
-    explorer   = CHAIN_EXPLORER.get(chain, "") + token_addr if token_addr else "N/A"
-    dex_link   = CHAIN_DEX.get(chain, "") + token_addr if token_addr else "N/A"
+    chain_name   = CHAIN_EMOJI.get(chain, chain.upper())
+    explorer     = CHAIN_EXPLORER.get(chain, "") + token_addr if token_addr else "N/A"
+    dex_link     = CHAIN_DEX.get(chain, "") + token_addr if token_addr else "N/A"
+    bnb_chain    = "solana" if chain == "solana" else "bsc"
+    binance_link = f"https://www.binance.com/en/web3wallet/swap?chain={bnb_chain}&toToken={token_addr}" if token_addr else "N/A"
     chg_str    = f"+{chg_1h:.1f}%" if chg_1h >= 0 else f"{chg_1h:.1f}%"
     new_tag    = " 🆕" if is_new else ""
     score_emoji= "🔥" if score >= 70 else "⚡" if score >= 50 else "⚠️"
