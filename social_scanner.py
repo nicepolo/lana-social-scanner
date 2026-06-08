@@ -26,9 +26,9 @@ CORS(app)
 
 # ── 設定 ──────────────────────────────────────────────────────
 SCAN_INTERVAL_MIN   = int(os.getenv("SOCIAL_SCAN_INTERVAL_MIN", "5"))
-MIN_VOLUME_USD      = float(os.getenv("MIN_VOLUME_USD", "50000"))      # 1h 最低成交量
-MIN_PRICE_CHANGE    = float(os.getenv("MIN_PRICE_CHANGE", "15"))       # 1h 最低漲幅 %
-MIN_RISK_SCORE      = int(os.getenv("MIN_RISK_SCORE", "50"))           # AI 風險分數門檻
+MIN_VOLUME_USD      = float(os.getenv("MIN_VOLUME_USD", "30000"))      # 1h 最低成交量（降低門檻）
+MIN_PRICE_CHANGE    = float(os.getenv("MIN_PRICE_CHANGE", "10"))       # 1h 最低漲幅 %（降低門檻）
+MIN_RISK_SCORE      = int(os.getenv("MIN_RISK_SCORE", "55"))           # AI 風險分數門檻（略提高）
 CHAINS              = ["bsc", "solana"]                                 # 監控鏈
 PORT                = int(os.getenv("PORT", "8081"))
 TZ_TAIPEI           = timezone(timedelta(hours=8))
@@ -282,9 +282,7 @@ def scan_once():
                 # 取得交易所上架狀態
                 listing = get_listing_status(sym)
 
-                # 已在兩個交易所都上架的跳過（沒有套利空間）
-                if listing["status"] == "LISTED":
-                    continue
+                # 不過濾已上架幣，只要技術面達標就推
 
                 # AI 風險分析
                 risk = analyze_token_risk(token)
