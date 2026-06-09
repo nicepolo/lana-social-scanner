@@ -298,6 +298,8 @@ def scan_once():
                     "target_2":  risk.get("target_2", "N/A"),
                 }
                 token["listing"]  = listing
+                # 統一 score key：前端讀 risk.score，AI 輸出 risk_score
+                risk["score"] = risk.get("risk_score", risk.get("score", 0))
                 token["risk"]     = risk
                 token["trade"]    = trade
                 scanned.append(token)
